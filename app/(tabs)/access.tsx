@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet } from 'react-native';
-import { Lock, Shield, Eye, Zap, Radio, Globe } from 'lucide-react-native';
+import { Lock, Shield, Eye, Zap } from 'lucide-react-native';
 
 import { getDueSignals, getAccessLevel, getProgressStats, getTimeUntilNextSignal } from '../utils/signalScheduler';
-import { getSignalContent, generateContextualTransmission, getStatusMessage } from '../utils/crypticSignalScheduler';
+import { generateContextualTransmission, getStatusMessage } from '../utils/crypticSignalScheduler';
+import SignalCard from '@/ui/components/SignalCard';
+import { useSignalContext, Signal } from '@/context/SignalContext';
 
 export default function AccessScreen() {
   const [transmission, setTransmission] = useState<string>('>>> Initialisation du terminal...');
@@ -14,7 +16,8 @@ export default function AccessScreen() {
   const [progressStats, setProgressStats] = useState({ signalsReceived: 0, totalSignals: 9, percentage: 0 });
   const [timeUntilNext, setTimeUntilNext] = useState({ message: "Calcul en cours..." });
   const [newSignalAvailable, setNewSignalAvailable] = useState(false);
-  const [signalContent, setSignalContent] = useState(null);
+  const { getSignal } = useSignalContext();
+  const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
 
   const loadSystemState = async () => {
     try {
@@ -61,38 +64,18 @@ export default function AccessScreen() {
 
   const receiveSignal = async (signalIndex: number) => {
     try {
-      // Récupérer les signaux déjà reçus
       const receivedJson = await AsyncStorage.getItem('signalsReceived');
       const received: number[] = receivedJson ? JSON.parse(receivedJson) : [];
 
-      // Ajouter le nouveau signal
       const newReceived = [...received, signalIndex].sort((a, b) => a - b);
       await AsyncStorage.setItem('signalsReceived', JSON.stringify(newReceived));
 
-      // Récupérer le contenu du signal
-      const content = getSignalContent(signalIndex);
-      setSignalContent(content);
+      const signal = getSignal(signalIndex);
+      if (signal) setSelectedSignal(signal);
 
-      // Recharger l'état
       await loadSystemState();
-
-      // Afficher une alerte avec le contenu du signal
-      if (content) {
-        Alert.alert(
-          `${content.title}`,
-          `Phase: ${content.phase}\nUrgence: ${content.urgency}\n\n${content.content.mainMessage}`,
-          [
-            {
-              text: "ACCUSÉ DE RÉCEPTION",
-              onPress: () => setSignalContent(null)
-            }
-          ]
-        );
-      }
-
     } catch (error) {
       console.error('Erreur lors de la réception du signal:', error);
-      Alert.alert('Erreur', 'Impossible de recevoir le signal. Réessayez.');
     }
   };
 
@@ -119,6 +102,10 @@ export default function AccessScreen() {
             {transmission}
           </Text>
         </View>
+
+        {selectedSignal && (
+          <SignalCard signal={selectedSignal} />
+        )}
 
         {/* Signaux disponibles */}
         {newSignalAvailable && (
