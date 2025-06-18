@@ -15,16 +15,52 @@ export const SIGNAL_CONFIG = {
   INTERVAL_DAYS: 21,
   TOTAL_SIGNALS: 9,
   TOTAL_DURATION_DAYS: 168, // 8 * 21 jours = ~5.5 mois
-};
+} as const;
+
+export interface SignalDate {
+  index: number;
+  date: string;
+  timestamp: number;
+  daysSinceStart: number;
+}
+
+export interface AccessLevel {
+  level: number;
+  name: string;
+  description: string;
+  permissions: string[];
+  nextUnlock: string | null;
+}
+
+export interface TimeUntilNextSignal {
+  days?: number;
+  hours?: number;
+  minutes?: number;
+  totalMs?: number;
+  message: string;
+  completed?: boolean;
+  ready?: boolean;
+}
+
+export interface ProgressStats {
+  signalsReceived: number;
+  totalSignals: number;
+  percentage: number;
+  daysSinceStart: number;
+  accessLevel: number;
+  accessName: string;
+  nextSignalIndex: number | null;
+  isComplete: boolean;
+}
 
 /**
  * Calcule les dates de diffusion de tous les signaux
  * @param {string} signupDate - Date d'inscription au format YYYY-MM-DD
  * @returns {Array} Tableau des dates de signaux
  */
-export function calculateSignalDates(signupDate) {
+export function calculateSignalDates(signupDate: string): SignalDate[] {
   const startDate = new Date(signupDate);
-  const signalDates = [];
+  const signalDates: SignalDate[] = [];
   
   for (let i = 0; i < SIGNAL_CONFIG.TOTAL_SIGNALS; i++) {
     const signalDate = new Date(startDate);
@@ -46,7 +82,7 @@ export function calculateSignalDates(signupDate) {
  * @param {string} signupDate - Date d'inscription
  * @returns {Array} Signaux dus aujourd'hui
  */
-export function getDueSignals(receivedSignals = [], signupDate) {
+export function getDueSignals(receivedSignals: number[] = [], signupDate: string): SignalDate[] {
   const today = new Date().toISOString().slice(0, 10);
   const todayTimestamp = new Date(today).getTime();
   
@@ -65,7 +101,7 @@ export function getDueSignals(receivedSignals = [], signupDate) {
  * @param {string} signupDate - Date d'inscription
  * @returns {Object|null} Prochain signal ou null si terminé
  */
-export function getNextSignal(receivedSignals = [], signupDate) {
+export function getNextSignal(receivedSignals: number[] = [], signupDate: string): SignalDate | null {
   const today = new Date().toISOString().slice(0, 10);
   const todayTimestamp = new Date(today).getTime();
   
@@ -85,7 +121,7 @@ export function getNextSignal(receivedSignals = [], signupDate) {
  * @param {string} signupDate - Date d'inscription
  * @returns {Object} Temps restant formaté
  */
-export function getTimeUntilNextSignal(receivedSignals = [], signupDate) {
+export function getTimeUntilNextSignal(receivedSignals: number[] = [], signupDate: string): TimeUntilNextSignal {
   const nextSignal = getNextSignal(receivedSignals, signupDate);
   
   if (!nextSignal) {
@@ -117,7 +153,7 @@ export function getTimeUntilNextSignal(receivedSignals = [], signupDate) {
  * @param {Array} receivedSignals - Signaux reçus
  * @returns {Object} Niveau d'accès et permissions
  */
-export function getAccessLevel(receivedSignals = []) {
+export function getAccessLevel(receivedSignals: number[] = []): AccessLevel {
   const signalCount = receivedSignals.length;
   
   if (signalCount === 0) {
@@ -175,7 +211,7 @@ export function getAccessLevel(receivedSignals = []) {
  * @param {string} signupDate - Date d'inscription
  * @returns {Object} Statistiques de progression
  */
-export function getProgressStats(receivedSignals = [], signupDate) {
+export function getProgressStats(receivedSignals: number[] = [], signupDate: string): ProgressStats {
   const totalSignals = SIGNAL_CONFIG.TOTAL_SIGNALS;
   const received = receivedSignals.length;
   const percentage = Math.round((received / totalSignals) * 100);

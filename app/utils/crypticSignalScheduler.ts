@@ -5,8 +5,23 @@
  * Chaque signal révèle une partie de l'histoire et débloque du contenu.
  */
 
+export interface SignalContent {
+  mainMessage: string;
+  crypticHint: string;
+  technicalData: string;
+  unlocks: string[];
+}
+
+export interface SignalEntry {
+  title: string;
+  phase: string;
+  urgency: string;
+  content: SignalContent;
+  transmissions: string[];
+}
+
 // Base de données des signaux narratifs
-export const SIGNAL_DATABASE = {
+export const SIGNAL_DATABASE: Record<number, SignalEntry> = {
   0: {
     title: "SIGNAL D'ACTIVATION",
     phase: "INITIALISATION",
@@ -175,7 +190,7 @@ export const SIGNAL_DATABASE = {
  * @param {number} signalIndex - Index du signal (0-8)
  * @returns {Object} Contenu du signal
  */
-export function getSignalContent(signalIndex) {
+export function getSignalContent(signalIndex: number): SignalEntry | null {
   return SIGNAL_DATABASE[signalIndex] || null;
 }
 
@@ -184,9 +199,9 @@ export function getSignalContent(signalIndex) {
  * @param {Array} receivedSignals - Signaux déjà reçus
  * @returns {string} Transmission cryptique
  */
-export function generateContextualTransmission(receivedSignals = []) {
+export function generateContextualTransmission(receivedSignals: number[] = []): string {
   const maxSignal = Math.max(...receivedSignals, -1);
-  let availableTransmissions = [];
+  let availableTransmissions: string[] = [];
   
   // Collecte toutes les transmissions des signaux reçus
   for (let i = 0; i <= maxSignal && i < 9; i++) {
@@ -214,7 +229,9 @@ export function generateContextualTransmission(receivedSignals = []) {
  * @param {Object} nextSignal - Prochain signal
  * @returns {string} Message d'état
  */
-export function getStatusMessage(receivedSignals = [], nextSignal = null) {
+import type { SignalDate } from './signalScheduler';
+
+export function getStatusMessage(receivedSignals: number[] = [], nextSignal: SignalDate | null = null): string {
   const signalCount = receivedSignals.length;
   
   if (signalCount === 0) {
@@ -250,8 +267,8 @@ export function getStatusMessage(receivedSignals = [], nextSignal = null) {
  * @param {Array} receivedSignals - Signaux reçus
  * @returns {Array} Liste d'indices
  */
-export function getCrypticHints(receivedSignals = []) {
-  const hints = [];
+export function getCrypticHints(receivedSignals: number[] = []): string[] {
+  const hints: string[] = [];
   
   receivedSignals.forEach(signalIndex => {
     const signal = SIGNAL_DATABASE[signalIndex];
