@@ -6,14 +6,17 @@ import { Lock, Shield, Eye, Zap, Radio, Globe } from 'lucide-react-native';
 
 import { getDueSignals, getAccessLevel, getProgressStats, getTimeUntilNextSignal } from '../utils/signalScheduler';
 import { getSignalContent, generateContextualTransmission, getStatusMessage } from '../utils/crypticSignalScheduler';
+import { getDueMinorSignals, getMinorSignalContent } from '../utils/minorSignalScheduler';
 
 export default function AccessScreen() {
   const [transmission, setTransmission] = useState<string>('>>> Initialisation du terminal...');
   const [dueSignals, setDueSignals] = useState<{ index: number; date: string }[]>([]);
+  const [dueMinorSignals, setDueMinorSignals] = useState<{ index: number; date: string }[]>([]);
   const [accessLevel, setAccessLevel] = useState({ level: 0, name: "PUBLIC", description: "", permissions: [] });
   const [progressStats, setProgressStats] = useState({ signalsReceived: 0, totalSignals: 9, percentage: 0 });
   const [timeUntilNext, setTimeUntilNext] = useState({ message: "Calcul en cours..." });
   const [newSignalAvailable, setNewSignalAvailable] = useState(false);
+  const [newMinorAvailable, setNewMinorAvailable] = useState(false);
   const [signalContent, setSignalContent] = useState(null);
 
   const loadSystemState = async () => {
@@ -22,19 +25,27 @@ export default function AccessScreen() {
       let signupDate = await AsyncStorage.getItem('signupDate');
       let receivedJson = await AsyncStorage.getItem('signalsReceived');
       let received: number[] = receivedJson ? JSON.parse(receivedJson) : [];
+      let minorReceivedJson = await AsyncStorage.getItem('minorSignalsReceived');
+      let minorReceived: number[] = minorReceivedJson ? JSON.parse(minorReceivedJson) : [];
 
       // Première initialisation
       if (!signupDate) {
         signupDate = new Date().toISOString().slice(0, 10);
         await AsyncStorage.setItem('signupDate', signupDate);
         await AsyncStorage.setItem('signalsReceived', JSON.stringify([]));
+        await AsyncStorage.setItem('minorSignalsReceived', JSON.stringify([]));
         received = [];
+        minorReceived = [];
       }
 
       // Vérifier les signaux dus
       const due = getDueSignals(received, signupDate);
       setDueSignals(due);
       setNewSignalAvailable(due.length > 0);
+
+      const dueMinor = getDueMinorSignals(minorReceived, signupDate);
+      setDueMinorSignals(dueMinor);
+      setNewMinorAvailable(dueMinor.length > 0);
 
       // Calculer les statistiques
       const stats = getProgressStats(received, signupDate);
@@ -96,6 +107,22 @@ export default function AccessScreen() {
     }
   };
 
+  const receiveMinorSignal = async (signalIndex: number) => {
+    try {
+      const receivedJson = await AsyncStorage.getItem('minorSignalsReceived');
+      const received: number[] = receivedJson ? JSON.parse(receivedJson) : [];
+      const newReceived = [...received, signalIndex].sort((a, b) => a - b);
+      await AsyncStorage.setItem('minorSignalsReceived', JSON.stringify(newReceived));
+
+      const content = getMinorSignalContent(signalIndex);
+      Alert.alert('TRANSMISSION', content);
+
+      await loadSystemState();
+    } catch (error) {
+      console.error('Erreur lors de la réception du signal mineur:', error);
+    }
+  };
+
   useEffect(() => {
     loadSystemState();
     
@@ -140,6 +167,28 @@ export default function AccessScreen() {
                   <Text style={styles.receiveButtonText}>
                     RECEVOIR SIGNAL #{signal.index}
                   </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Transmissions mineures */}
+        {newMinorAvailable && (
+          <View style={styles.signalAlert}>
+            <Radio size={24} color="#00ff41" />
+            <View style={styles.signalAlertContent}>
+              <Text style={styles.signalAlertTitle}>TRANSMISSIONS EN ATTENTE</Text>
+              <Text style={styles.signalAlertText}>
+                {dueMinorSignals.length} transmission(s) à lire
+              </Text>
+              {dueMinorSignals.map((signal) => (
+                <TouchableOpacity
+                  key={signal.index}
+                  style={styles.receiveButton}
+                  onPress={() => receiveMinorSignal(signal.index)}
+                >
+                  <Text style={styles.receiveButtonText}>MESSAGE #{signal.index}</Text>
                 </TouchableOpacity>
               ))}
             </View>
