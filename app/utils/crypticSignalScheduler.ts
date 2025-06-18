@@ -5,8 +5,10 @@
  * Chaque signal révèle une partie de l'histoire et débloque du contenu.
  */
 
+import { Signal, MinorSignal } from '../domain/types';
+
 // Base de données des signaux narratifs
-export const SIGNAL_DATABASE = {
+export const SIGNAL_DATABASE: Record<number, Signal> = {
   0: {
     title: "SIGNAL D'ACTIVATION",
     phase: "INITIALISATION",
@@ -175,7 +177,7 @@ export const SIGNAL_DATABASE = {
  * @param {number} signalIndex - Index du signal (0-8)
  * @returns {Object} Contenu du signal
  */
-export function getSignalContent(signalIndex) {
+export function getSignalContent(signalIndex: number): Signal | null {
   return SIGNAL_DATABASE[signalIndex] || null;
 }
 
@@ -184,7 +186,7 @@ export function getSignalContent(signalIndex) {
  * @param {Array} receivedSignals - Signaux déjà reçus
  * @returns {string} Transmission cryptique
  */
-export function generateContextualTransmission(receivedSignals = []) {
+export function generateContextualTransmission(receivedSignals: number[] = []): string {
   const maxSignal = Math.max(...receivedSignals, -1);
   let availableTransmissions = [];
   
@@ -214,7 +216,10 @@ export function generateContextualTransmission(receivedSignals = []) {
  * @param {Object} nextSignal - Prochain signal
  * @returns {string} Message d'état
  */
-export function getStatusMessage(receivedSignals = [], nextSignal = null) {
+export function getStatusMessage(
+  receivedSignals: number[] = [],
+  nextSignal: MinorSignal | null = null
+): string {
   const signalCount = receivedSignals.length;
   
   if (signalCount === 0) {
@@ -250,7 +255,7 @@ export function getStatusMessage(receivedSignals = [], nextSignal = null) {
  * @param {Array} receivedSignals - Signaux reçus
  * @returns {Array} Liste d'indices
  */
-export function getCrypticHints(receivedSignals = []) {
+export function getCrypticHints(receivedSignals: number[] = []): string[] {
   const hints = [];
   
   receivedSignals.forEach(signalIndex => {

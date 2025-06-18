@@ -6,15 +6,16 @@ import { Lock, Shield, Eye, Zap, Radio, Globe } from 'lucide-react-native';
 
 import { getDueSignals, getAccessLevel, getProgressStats, getTimeUntilNextSignal } from '../utils/signalScheduler';
 import { getSignalContent, generateContextualTransmission, getStatusMessage } from '../utils/crypticSignalScheduler';
+import { MinorSignal, Signal } from '../domain/types';
 
 export default function AccessScreen() {
   const [transmission, setTransmission] = useState<string>('>>> Initialisation du terminal...');
-  const [dueSignals, setDueSignals] = useState<{ index: number; date: string }[]>([]);
+  const [dueSignals, setDueSignals] = useState<MinorSignal[]>([]);
   const [accessLevel, setAccessLevel] = useState({ level: 0, name: "PUBLIC", description: "", permissions: [] });
   const [progressStats, setProgressStats] = useState({ signalsReceived: 0, totalSignals: 9, percentage: 0 });
   const [timeUntilNext, setTimeUntilNext] = useState({ message: "Calcul en cours..." });
   const [newSignalAvailable, setNewSignalAvailable] = useState(false);
-  const [signalContent, setSignalContent] = useState(null);
+  const [signalContent, setSignalContent] = useState<Signal | null>(null);
 
   const loadSystemState = async () => {
     try {
