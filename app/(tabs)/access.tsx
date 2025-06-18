@@ -3,6 +3,10 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet } from 'react-native';
 import { Lock, Shield, Eye, Zap, Radio, Globe } from 'lucide-react-native';
+import * as Network from 'expo-network';
+
+import { loadCachedPuzzles, savePuzzle } from '../infrastructure/cache';
+import { trackActivation, trackSignalReceived, trackPuzzleSolved } from '../infrastructure/analytics';
 
 import { getDueSignals, getAccessLevel, getProgressStats, getTimeUntilNextSignal } from '../utils/signalScheduler';
 import { getSignalContent, generateContextualTransmission, getStatusMessage } from '../utils/crypticSignalScheduler';
@@ -29,12 +33,22 @@ export default function AccessScreen() {
         await AsyncStorage.setItem('signupDate', signupDate);
         await AsyncStorage.setItem('signalsReceived', JSON.stringify([]));
         received = [];
+        trackActivation();
       }
 
       // Vérifier les signaux dus
       const due = getDueSignals(received, signupDate);
       setDueSignals(due);
       setNewSignalAvailable(due.length > 0);
+
+      const network = await Network.getNetworkStateAsync();
+      if (!network.isConnected) {
+        const puzzles = await loadCachedPuzzles();
+        const last = due[0]?.index;
+        if (last !== undefined && puzzles[last]) {
+          setSignalContent(puzzles[last]);
+        }
+      }
 
       // Calculer les statistiques
       const stats = getProgressStats(received, signupDate);
@@ -69,9 +83,12 @@ export default function AccessScreen() {
       const newReceived = [...received, signalIndex].sort((a, b) => a - b);
       await AsyncStorage.setItem('signalsReceived', JSON.stringify(newReceived));
 
+      trackSignalReceived(signalIndex);
+
       // Récupérer le contenu du signal
       const content = getSignalContent(signalIndex);
       setSignalContent(content);
+      await savePuzzle(String(signalIndex), content);
 
       // Recharger l'état
       await loadSystemState();
@@ -94,6 +111,10 @@ export default function AccessScreen() {
       console.error('Erreur lors de la réception du signal:', error);
       Alert.alert('Erreur', 'Impossible de recevoir le signal. Réessayez.');
     }
+  };
+
+  const puzzleSolved = async (id: string) => {
+    trackPuzzleSolved(id);
   };
 
   useEffect(() => {
