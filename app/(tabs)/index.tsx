@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Animated, SafeAreaView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  getSignupDate,
+  getSignalsReceived,
+} from '../infrastructure/storage';
 import { getProgressStats, getTimeUntilNextSignal } from '../utils/signalScheduler';
 import { generateContextualTransmission } from '../utils/crypticSignalScheduler';
 
@@ -36,9 +39,8 @@ export default function SignalScreen() {
   // Charger l'état du système
   const loadSystemState = async () => {
     try {
-      const signupDate = await AsyncStorage.getItem('signupDate');
-      const receivedJson = await AsyncStorage.getItem('signalsReceived');
-      const received: number[] = receivedJson ? JSON.parse(receivedJson) : [];
+      const signupDate = await getSignupDate();
+      const received = await getSignalsReceived();
 
       if (signupDate) {
         // Calculer les statistiques

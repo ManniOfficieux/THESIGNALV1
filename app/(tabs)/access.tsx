@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  getSignupDate,
+  setSignupDate,
+  getSignalsReceived,
+  setSignalsReceived,
+} from '../infrastructure/storage';
 import { StyleSheet } from 'react-native';
 import { Lock, Shield, Eye, Zap, Radio, Globe } from 'lucide-react-native';
 
@@ -19,15 +24,14 @@ export default function AccessScreen() {
   const loadSystemState = async () => {
     try {
       // Récupérer les données stockées
-      let signupDate = await AsyncStorage.getItem('signupDate');
-      let receivedJson = await AsyncStorage.getItem('signalsReceived');
-      let received: number[] = receivedJson ? JSON.parse(receivedJson) : [];
+      let signupDate = await getSignupDate();
+      let received = await getSignalsReceived();
 
       // Première initialisation
       if (!signupDate) {
         signupDate = new Date().toISOString().slice(0, 10);
-        await AsyncStorage.setItem('signupDate', signupDate);
-        await AsyncStorage.setItem('signalsReceived', JSON.stringify([]));
+        await setSignupDate(signupDate);
+        await setSignalsReceived([]);
         received = [];
       }
 
@@ -62,12 +66,11 @@ export default function AccessScreen() {
   const receiveSignal = async (signalIndex: number) => {
     try {
       // Récupérer les signaux déjà reçus
-      const receivedJson = await AsyncStorage.getItem('signalsReceived');
-      const received: number[] = receivedJson ? JSON.parse(receivedJson) : [];
+      const received = await getSignalsReceived();
 
       // Ajouter le nouveau signal
       const newReceived = [...received, signalIndex].sort((a, b) => a - b);
-      await AsyncStorage.setItem('signalsReceived', JSON.stringify(newReceived));
+      await setSignalsReceived(newReceived);
 
       // Récupérer le contenu du signal
       const content = getSignalContent(signalIndex);
