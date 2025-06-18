@@ -3,9 +3,13 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import { initAnalytics } from './infrastructure/analytics';
 
 export default function RootLayout() {
   useFrameworkReady();
+  useEffect(() => {
+    initAnalytics();
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
