@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet } from 'react-native';
@@ -15,6 +16,7 @@ export default function AccessScreen() {
   const [timeUntilNext, setTimeUntilNext] = useState({ message: "Calcul en cours..." });
   const [newSignalAvailable, setNewSignalAvailable] = useState(false);
   const [signalContent, setSignalContent] = useState(null);
+  const { t } = useTranslation();
 
   const loadSystemState = async () => {
     try {
@@ -110,7 +112,7 @@ export default function AccessScreen() {
         {/* En-tête */}
         <View style={styles.header}>
           <Lock size={32} color="#00ff41" />
-          <Text style={styles.headerText}>PROTOCOLES D'ACCÈS</Text>
+          <Text style={styles.headerText}>{t('access.header')}</Text>
         </View>
         
         {/* Transmission système */}
@@ -126,10 +128,10 @@ export default function AccessScreen() {
             <Zap size={24} color="#00ff41" />
             <View style={styles.signalAlertContent}>
               <Text style={styles.signalAlertTitle}>
-                NOUVEAU SIGNAL DÉTECTÉ
+                {t('access.newSignal')}
               </Text>
               <Text style={styles.signalAlertText}>
-                {dueSignals.length} signal(s) en attente de réception
+                {t('access.signalsPending', { count: dueSignals.length })}
               </Text>
               {dueSignals.map((signal) => (
                 <TouchableOpacity
@@ -138,7 +140,7 @@ export default function AccessScreen() {
                   onPress={() => receiveSignal(signal.index)}
                 >
                   <Text style={styles.receiveButtonText}>
-                    RECEVOIR SIGNAL #{signal.index}
+                    {t('access.receiveSignal', { index: signal.index })}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -148,7 +150,7 @@ export default function AccessScreen() {
 
         {/* Statistiques de progression */}
         <View style={styles.progressSection}>
-          <Text style={styles.sectionTitle}>PROGRESSION DU SIGNAL</Text>
+          <Text style={styles.sectionTitle}>{t('access.signalProgress')}</Text>
           
           <View style={styles.progressBar}>
             <View 
@@ -161,20 +163,20 @@ export default function AccessScreen() {
           
           <View style={styles.progressStats}>
             <Text style={styles.progressText}>
-              Signaux reçus: {progressStats.signalsReceived}/{progressStats.totalSignals}
+              {t('access.signalsReceived', {received: progressStats.signalsReceived, total: progressStats.totalSignals})}
             </Text>
             <Text style={styles.progressText}>
-              Progression: {progressStats.percentage}%
+              {t('access.progress', {percent: progressStats.percentage})}
             </Text>
             <Text style={styles.progressText}>
-              Jours actifs: {progressStats.daysSinceStart}
+              {t('access.daysActive', {days: progressStats.daysSinceStart})}
             </Text>
           </View>
         </View>
 
         {/* Niveau d'accès actuel */}
         <View style={styles.accessSection}>
-          <Text style={styles.sectionTitle}>NIVEAU D'HABILITATION</Text>
+          <Text style={styles.sectionTitle}>{t('access.accessLevel')}</Text>
           
           <View style={styles.currentAccess}>
             <View style={styles.accessBadge}>
@@ -188,7 +190,7 @@ export default function AccessScreen() {
 
           {/* Permissions */}
           <View style={styles.permissionsSection}>
-            <Text style={styles.permissionsTitle}>AUTORISATIONS ACTIVES:</Text>
+            <Text style={styles.permissionsTitle}>{t('access.activePermissions')}</Text>
             {accessLevel.permissions.map((permission, index) => (
               <Text key={index} style={styles.permissionItem}>
                 • {permission.replace(/_/g, ' ').toUpperCase()}
@@ -199,7 +201,7 @@ export default function AccessScreen() {
 
         {/* Niveaux d'accès */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>HIÉRARCHIE D'ACCÈS</Text>
+          <Text style={styles.sectionTitle}>{t('access.accessHierarchy')}</Text>
           
           <View style={[styles.levelItem, progressStats.signalsReceived >= 0 ? styles.levelActive : styles.levelLocked]}>
             <Text style={progressStats.signalsReceived >= 0 ? styles.levelText : styles.levelTextLocked}>
@@ -249,19 +251,19 @@ export default function AccessScreen() {
 
         {/* Prochain signal */}
         <View style={styles.nextSignalSection}>
-          <Text style={styles.sectionTitle}>PROCHAIN SIGNAL</Text>
+          <Text style={styles.sectionTitle}>{t('access.nextSignal')}</Text>
           
           {timeUntilNext.completed ? (
             <Text style={styles.nextSignalCompleted}>
-              🎉 SÉQUENCE TERMINÉE - VOUS ÊTES MAÎTRE DU SIGNAL
+              {t('access.sequenceComplete')}
             </Text>
           ) : timeUntilNext.ready ? (
             <Text style={styles.nextSignalReady}>
-              ⚡ SIGNAL DISPONIBLE - VÉRIFIEZ VOS TRANSMISSIONS
+              {t('access.signalAvailable')}
             </Text>
           ) : (
             <Text style={styles.nextSignalTime}>
-              ⏱️ Temps restant: {timeUntilNext.message}
+              {t('access.timeRemaining', { time: timeUntilNext.message })}
             </Text>
           )}
         </View>
@@ -270,7 +272,7 @@ export default function AccessScreen() {
         <View style={styles.securitySection}>
           <Shield size={24} color="#ff4444" />
           <Text style={styles.securityText}>
-            SURVEILLANCE ACTIVE - TOUTES LES SESSIONS SONT ENREGISTRÉES
+            {t('access.surveillance')}
           </Text>
         </View>
 
@@ -278,7 +280,7 @@ export default function AccessScreen() {
         <View style={styles.monitorSection}>
           <Eye size={20} color="#00ff41" />
           <Text style={styles.monitorText}>
-            Niveau de sécurité: {accessLevel.level >= 3 ? 'MAXIMUM' : 'ÉLEVÉ'} | 
+            {t('access.securityLevel')}: {accessLevel.level >= 3 ? 'MAXIMUM' : 'ÉLEVÉ'} |{' '}
             Dernière activité: {new Date().toLocaleTimeString()}
           </Text>
         </View>

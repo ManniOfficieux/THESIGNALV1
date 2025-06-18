@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet, ScrollView, Animated, RefreshControl } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import ReanimatedAnimated, { 
@@ -45,10 +46,11 @@ export default function NetworkScreen() {
   const pulseAnim = useRef(new Animated.Value(0.5)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const flickerAnim = useRef(new Animated.Value(1)).current;
-  
+
   const [transmissions, setTransmissions] = useState(generateTransmissions());
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date().toLocaleTimeString());
+  const { t } = useTranslation();
 
   // Reanimated values for swipe gestures
   const translateY = useSharedValue(0);
@@ -189,64 +191,64 @@ export default function NetworkScreen() {
               <Animated.View style={{ opacity: pulseAnim }}>
                 <Radio size={32} color="#00ff41" />
               </Animated.View>
-              <Text style={styles.headerText}>STATUT DU RÉSEAU</Text>
+              <Text style={styles.headerText}>{t('network.header')}</Text>
             </Animated.View>
 
             {/* Statut de connexion */}
             <View style={styles.statusSection}>
               <View style={styles.statusItem}>
                 <Wifi size={20} color="#00ff41" />
-                <Text style={styles.statusLabel}>SIGNAL PRIMAIRE</Text>
-                <Text style={styles.statusValue}>ACTIF</Text>
+                <Text style={styles.statusLabel}>{t('network.primarySignal')}</Text>
+                <Text style={styles.statusValue}>{t('network.active')}</Text>
               </View>
               
               <View style={styles.statusItem}>
                 <Globe size={20} color="#ffaa00" />
-                <Text style={styles.statusLabel}>RÉSEAU GLOBAL</Text>
-                <Text style={styles.statusValueWarning}>INSTABLE</Text>
+                <Text style={styles.statusLabel}>{t('network.globalNetwork')}</Text>
+                <Text style={styles.statusValueWarning}>{t('network.unstable')}</Text>
               </View>
               
               <View style={styles.statusItem}>
                 <Zap size={20} color="#ff4444" />
-                <Text style={styles.statusLabel}>CANAUX PROFONDS</Text>
-                <Text style={styles.statusValueError}>CHIFFRÉS</Text>
+                <Text style={styles.statusLabel}>{t('network.deepChannels')}</Text>
+                <Text style={styles.statusValueError}>{t('network.encrypted')}</Text>
               </View>
             </View>
 
             {/* Nœuds du réseau */}
             <View style={styles.nodesSection}>
-              <Text style={styles.sectionTitle}>NŒUDS ACTIFS</Text>
+              <Text style={styles.sectionTitle}>{t('network.activeNodes')}</Text>
               
               <View style={styles.nodeGrid}>
                 <View style={styles.nodeItem}>
                   <View style={[styles.nodeIndicator, { backgroundColor: '#00ff41' }]} />
-                  <Text style={styles.nodeText}>NŒUD-ALPHA</Text>
+                  <Text style={styles.nodeText}>{t('network.nodeAlpha')}</Text>
                   <Text style={styles.nodeLocation}>AMSTERDAM</Text>
                 </View>
                 
                 <View style={styles.nodeItem}>
                   <View style={[styles.nodeIndicator, { backgroundColor: '#ffaa00' }]} />
-                  <Text style={styles.nodeText}>NŒUD-BETA</Text>
+                  <Text style={styles.nodeText}>{t('network.nodeBeta')}</Text>
                   <Text style={styles.nodeLocation}>SINGAPOUR</Text>
                 </View>
                 
                 <View style={styles.nodeItem}>
                   <View style={[styles.nodeIndicator, { backgroundColor: '#ff4444' }]} />
-                  <Text style={styles.nodeText}>NŒUD-GAMMA</Text>
+                  <Text style={styles.nodeText}>{t('network.nodeGamma')}</Text>
                   <Text style={styles.nodeLocation}>CLASSIFIÉ</Text>
                 </View>
                 
                 <View style={styles.nodeItem}>
                   <View style={[styles.nodeIndicator, { backgroundColor: '#666666' }]} />
-                  <Text style={styles.nodeTextInactive}>NŒUD-DELTA</Text>
-                  <Text style={styles.nodeLocationInactive}>HORS LIGNE</Text>
+                  <Text style={styles.nodeTextInactive}>{t('network.nodeDelta')}</Text>
+                  <Text style={styles.nodeLocationInactive}>{t('network.offline')}</Text>
                 </View>
               </View>
             </View>
 
             {/* Force du signal */}
             <View style={styles.signalSection}>
-              <Text style={styles.sectionTitle}>ANALYSE DU SIGNAL</Text>
+              <Text style={styles.sectionTitle}>{t('network.signalAnalysis')}</Text>
               
               <View style={styles.signalBars}>
                 <View style={[styles.signalBar, { height: 20, backgroundColor: '#00ff41' }]} />
@@ -263,12 +265,12 @@ export default function NetworkScreen() {
 
             {/* Serveurs distants */}
             <View style={styles.serversSection}>
-              <Text style={styles.sectionTitle}>SERVEURS DISTANTS</Text>
+              <Text style={styles.sectionTitle}>{t('network.remoteServers')}</Text>
               
               <View style={styles.serverItem}>
                 <Shield size={18} color="#00ff41" />
                 <View style={styles.serverInfo}>
-                  <Text style={styles.serverName}>SERVEUR-PRIME</Text>
+                  <Text style={styles.serverName}>{t('network.serverPrime')}</Text>
                   <Text style={styles.serverStatus}>Opérationnel • 99.7% uptime</Text>
                 </View>
                 <Text style={styles.serverLoad}>12%</Text>
@@ -277,7 +279,7 @@ export default function NetworkScreen() {
               <View style={styles.serverItem}>
                 <Shield size={18} color="#ffaa00" />
                 <View style={styles.serverInfo}>
-                  <Text style={styles.serverName}>SERVEUR-BACKUP</Text>
+                  <Text style={styles.serverName}>{t('network.serverBackup')}</Text>
                   <Text style={styles.serverStatusWarning}>Maintenance • 87.2% uptime</Text>
                 </View>
                 <Text style={styles.serverLoadWarning}>67%</Text>
@@ -286,7 +288,7 @@ export default function NetworkScreen() {
               <View style={styles.serverItem}>
                 <Shield size={18} color="#ff4444" />
                 <View style={styles.serverInfo}>
-                  <Text style={styles.serverNameError}>SERVEUR-SHADOW</Text>
+                  <Text style={styles.serverNameError}>{t('network.serverShadow')}</Text>
                   <Text style={styles.serverStatusError}>Inaccessible • Statut inconnu</Text>
                 </View>
                 <Text style={styles.serverLoadError}>???</Text>
@@ -295,31 +297,31 @@ export default function NetworkScreen() {
 
             {/* Métriques de performance */}
             <View style={styles.metricsSection}>
-              <Text style={styles.sectionTitle}>MÉTRIQUES TEMPS RÉEL</Text>
+              <Text style={styles.sectionTitle}>{t('network.realTimeMetrics')}</Text>
               
               <View style={styles.metricGrid}>
                 <View style={styles.metricItem}>
                   <Text style={styles.metricValue}>2.3ms</Text>
-                  <Text style={styles.metricLabel}>LATENCE</Text>
+                  <Text style={styles.metricLabel}>{t('network.latency')}</Text>
                 </View>
                 <View style={styles.metricItem}>
                   <Text style={styles.metricValue}>847MB/s</Text>
-                  <Text style={styles.metricLabel}>DÉBIT</Text>
+                  <Text style={styles.metricLabel}>{t('network.throughput')}</Text>
                 </View>
                 <View style={styles.metricItem}>
                   <Text style={styles.metricValueWarning}>0.02%</Text>
-                  <Text style={styles.metricLabel}>PERTE</Text>
+                  <Text style={styles.metricLabel}>{t('network.loss')}</Text>
                 </View>
                 <View style={styles.metricItem}>
                   <Text style={styles.metricValue}>99.97%</Text>
-                  <Text style={styles.metricLabel}>FIABILITÉ</Text>
+                  <Text style={styles.metricLabel}>{t('network.reliability')}</Text>
                 </View>
               </View>
             </View>
 
             {/* Activité réseau */}
             <View style={styles.activitySection}>
-              <Text style={styles.sectionTitle}>ACTIVITÉ RÉSEAU</Text>
+              <Text style={styles.sectionTitle}>{t('network.networkActivity')}</Text>
               <View style={styles.activityGraph}>
                 {[...Array(20)].map((_, i) => (
                   <View 
@@ -335,7 +337,7 @@ export default function NetworkScreen() {
 
             {/* Transmissions cryptiques */}
             <Animated.View style={[styles.transmissionsSection, { opacity: flickerAnim }]}>
-              <Text style={styles.sectionTitle}>TRANSMISSIONS RÉCENTES</Text>
+              <Text style={styles.sectionTitle}>{t('network.recentTransmissions')}</Text>
               
               <View style={styles.transmissionContainer}>
                 {transmissions.map((transmission) => (
@@ -356,37 +358,37 @@ export default function NetworkScreen() {
 
             {/* Analyse des signaux */}
             <View style={styles.analysisSection}>
-              <Text style={styles.sectionTitle}>ANALYSE DES SIGNAUX</Text>
+              <Text style={styles.sectionTitle}>{t('network.signalAnalysisSection')}</Text>
               
               <View style={styles.analysisItem}>
-                <Text style={styles.analysisLabel}>Fréquence dominante:</Text>
+                <Text style={styles.analysisLabel}>{t('network.dominantFrequency')}</Text>
                 <Text style={styles.analysisValue}>432.7 Hz</Text>
               </View>
               
               <View style={styles.analysisItem}>
-                <Text style={styles.analysisLabel}>Modulation détectée:</Text>
+                <Text style={styles.analysisLabel}>{t('network.detectedModulation')}</Text>
                 <Text style={styles.analysisValue}>AM/FM hybride</Text>
               </View>
               
               <View style={styles.analysisItem}>
-                <Text style={styles.analysisLabel}>Origine estimée:</Text>
+                <Text style={styles.analysisLabel}>{t('network.estimatedOrigin')}</Text>
                 <Text style={styles.analysisValueWarning}>Coordonnées inconnues</Text>
               </View>
               
               <View style={styles.analysisItem}>
-                <Text style={styles.analysisLabel}>Niveau de chiffrement:</Text>
+                <Text style={styles.analysisLabel}>{t('network.encryptionLevel')}</Text>
                 <Text style={styles.analysisValueError}>Militaire (AES-256)</Text>
               </View>
             </View>
 
             {/* Prochaine fenêtre */}
             <View style={styles.nextWindowSection}>
-              <Text style={styles.sectionTitle}>PROCHAINE FENÊTRE</Text>
+              <Text style={styles.sectionTitle}>{t('network.nextWindow')}</Text>
               <Text style={styles.nextWindowText}>
-                Ouverture prévue dans 13h 41min 27s
+                {t('network.openingScheduled', { time: '13h 41min 27s' })}
               </Text>
               <Text style={styles.nextWindowSubtext}>
-                Préparation automatique des systèmes de réception...
+                {t('network.preparingReception')}
               </Text>
             </View>
           </ScrollView>
