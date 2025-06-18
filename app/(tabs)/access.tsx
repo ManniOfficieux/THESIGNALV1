@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet } from 'react-native';
 import { Lock, Shield, Eye, Zap, Radio, Globe } from 'lucide-react-native';
 
 import { getDueSignals, getAccessLevel, getProgressStats, getTimeUntilNextSignal } from '../utils/signalScheduler';
 import { getSignalContent, generateContextualTransmission, getStatusMessage } from '../utils/crypticSignalScheduler';
+import { useUser, useSignals } from '../ui/context/SignalContext';
 
 export default function AccessScreen() {
   const [transmission, setTransmission] = useState<string>('>>> Initialisation du terminal...');
@@ -15,29 +15,27 @@ export default function AccessScreen() {
   const [timeUntilNext, setTimeUntilNext] = useState({ message: "Calcul en cours..." });
   const [newSignalAvailable, setNewSignalAvailable] = useState(false);
   const [signalContent, setSignalContent] = useState(null);
+  const { signupDate, setSignupDate } = useUser();
+  const { receivedSignals, setReceivedSignals } = useSignals();
 
-  const loadSystemState = async () => {
-    try {
-      // Récupérer les données stockées
-      let signupDate = await AsyncStorage.getItem('signupDate');
-      let receivedJson = await AsyncStorage.getItem('signalsReceived');
-      let received: number[] = receivedJson ? JSON.parse(receivedJson) : [];
+  const loadSystemState = () => {
+    let date = signupDate;
+    let received = receivedSignals;
 
-      // Première initialisation
-      if (!signupDate) {
-        signupDate = new Date().toISOString().slice(0, 10);
-        await AsyncStorage.setItem('signupDate', signupDate);
-        await AsyncStorage.setItem('signalsReceived', JSON.stringify([]));
-        received = [];
-      }
+    if (!date) {
+      date = new Date().toISOString().slice(0, 10);
+      setSignupDate(date);
+      setReceivedSignals([]);
+      received = [];
+    }
 
       // Vérifier les signaux dus
-      const due = getDueSignals(received, signupDate);
+      const due = getDueSignals(received, date);
       setDueSignals(due);
       setNewSignalAvailable(due.length > 0);
 
       // Calculer les statistiques
-      const stats = getProgressStats(received, signupDate);
+      const stats = getProgressStats(received, date);
       setProgressStats(stats);
 
       // Niveau d'accès
@@ -45,64 +43,43 @@ export default function AccessScreen() {
       setAccessLevel(access);
 
       // Temps jusqu'au prochain signal
-      const timeLeft = getTimeUntilNextSignal(received, signupDate);
+      const timeLeft = getTimeUntilNextSignal(received, date);
       setTimeUntilNext(timeLeft);
 
       // Transmission contextuelle
       const contextTransmission = generateContextualTransmission(received);
       const statusMsg = getStatusMessage(received, timeLeft.ready ? null : { daysSinceStart: stats.daysSinceStart });
       setTransmission(`${statusMsg}\n\n${contextTransmission}`);
-
-    } catch (error) {
-      console.error('Erreur lors du chargement:', error);
-      setTransmission('>>> Erreur système. Redémarrage requis.');
-    }
   };
 
-  const receiveSignal = async (signalIndex: number) => {
-    try {
-      // Récupérer les signaux déjà reçus
-      const receivedJson = await AsyncStorage.getItem('signalsReceived');
-      const received: number[] = receivedJson ? JSON.parse(receivedJson) : [];
+  const receiveSignal = (signalIndex: number) => {
+    const newReceived = [...receivedSignals, signalIndex].sort((a, b) => a - b);
+    setReceivedSignals(newReceived);
 
-      // Ajouter le nouveau signal
-      const newReceived = [...received, signalIndex].sort((a, b) => a - b);
-      await AsyncStorage.setItem('signalsReceived', JSON.stringify(newReceived));
+    const content = getSignalContent(signalIndex);
+    setSignalContent(content);
 
-      // Récupérer le contenu du signal
-      const content = getSignalContent(signalIndex);
-      setSignalContent(content);
+    loadSystemState();
 
-      // Recharger l'état
-      await loadSystemState();
-
-      // Afficher une alerte avec le contenu du signal
-      if (content) {
-        Alert.alert(
-          `${content.title}`,
-          `Phase: ${content.phase}\nUrgence: ${content.urgency}\n\n${content.content.mainMessage}`,
-          [
-            {
-              text: "ACCUSÉ DE RÉCEPTION",
-              onPress: () => setSignalContent(null)
-            }
-          ]
-        );
-      }
-
-    } catch (error) {
-      console.error('Erreur lors de la réception du signal:', error);
-      Alert.alert('Erreur', 'Impossible de recevoir le signal. Réessayez.');
+    if (content) {
+      Alert.alert(
+        `${content.title}`,
+        `Phase: ${content.phase}\nUrgence: ${content.urgency}\n\n${content.content.mainMessage}`,
+        [
+          {
+            text: "ACCUSÉ DE RÉCEPTION",
+            onPress: () => setSignalContent(null)
+          }
+        ]
+      );
     }
   };
 
   useEffect(() => {
     loadSystemState();
-    
-    // Actualiser toutes les minutes
     const interval = setInterval(loadSystemState, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [signupDate, receivedSignals]);
 
   return (
     <View style={styles.container}>

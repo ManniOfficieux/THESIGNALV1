@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Animated, SafeAreaView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getProgressStats, getTimeUntilNextSignal } from '../utils/signalScheduler';
 import { generateContextualTransmission } from '../utils/crypticSignalScheduler';
+import { useUser, useSignals } from '../ui/context/SignalContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,39 +33,30 @@ export default function SignalScreen() {
   const scanlineAnim = useRef(new Animated.Value(0)).current;
   const fadeInAnim = useRef(new Animated.Value(0)).current;
 
+  const { signupDate } = useUser();
+  const { receivedSignals } = useSignals();
+
   // Charger l'état du système
-  const loadSystemState = async () => {
-    try {
-      const signupDate = await AsyncStorage.getItem('signupDate');
-      const receivedJson = await AsyncStorage.getItem('signalsReceived');
-      const received: number[] = receivedJson ? JSON.parse(receivedJson) : [];
+  const loadSystemState = () => {
+    if (signupDate) {
+      const stats = getProgressStats(receivedSignals, signupDate);
+      setProgressInfo(stats);
 
-      if (signupDate) {
-        // Calculer les statistiques
-        const stats = getProgressStats(received, signupDate);
-        setProgressInfo(stats);
+      const timeLeft = getTimeUntilNextSignal(receivedSignals, signupDate);
 
-        // Temps jusqu'au prochain signal
-        const timeLeft = getTimeUntilNextSignal(received, signupDate);
-        
-        if (timeLeft.completed) {
-          setNextSignalInfo('>>> MAÎTRE DU SIGNAL - Séquence terminée');
-        } else if (timeLeft.ready) {
-          setNextSignalInfo('>>> Signal disponible maintenant !');
-        } else {
-          setNextSignalInfo(`>>> Prochain signal : ${timeLeft.message}`);
-        }
-
-        // Transmission contextuelle
-        const transmission = generateContextualTransmission(received);
-        setSystemStatus(transmission);
+      if (timeLeft.completed) {
+        setNextSignalInfo('>>> MAÎTRE DU SIGNAL - Séquence terminée');
+      } else if (timeLeft.ready) {
+        setNextSignalInfo('>>> Signal disponible maintenant !');
       } else {
-        setSystemStatus('>>> Terminal non activé. Première connexion requise.');
-        setNextSignalInfo('>>> En attente d\'activation...');
+        setNextSignalInfo(`>>> Prochain signal : ${timeLeft.message}`);
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement:', error);
-      setSystemStatus('>>> Erreur système. Redémarrage requis.');
+
+      const transmission = generateContextualTransmission(receivedSignals);
+      setSystemStatus(transmission);
+    } else {
+      setSystemStatus('>>> Terminal non activé. Première connexion requise.');
+      setNextSignalInfo('>>> En attente d\'activation...');
     }
   };
 
@@ -79,14 +70,10 @@ export default function SignalScreen() {
   }, []);
 
   useEffect(() => {
-    // Charger l'état initial
     loadSystemState();
-
-    // Actualiser toutes les 30 secondes
     const interval = setInterval(loadSystemState, 30000);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [signupDate, receivedSignals]);
 
   useEffect(() => {
     // Animation de pulsation du radar (logo)
